@@ -11,7 +11,7 @@ import java.util.Map;
 public interface ConfigurableComponent {
     /**
      * Get the currently set configuration
-     * @return config key -> value map
+     * @return configuration map
      */
     Map<ConfigKey, Object> getCurrentConfig();
 

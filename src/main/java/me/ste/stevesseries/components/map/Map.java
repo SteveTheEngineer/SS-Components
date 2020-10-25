@@ -64,7 +64,7 @@ public abstract class Map {
 
     /**
      * Get whether is the map rendered uniquely for each player
-     * @return
+     * @return true, if it is
      */
     public final boolean isContextual() {
         return this.contextual;

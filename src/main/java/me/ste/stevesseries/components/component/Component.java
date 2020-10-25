@@ -57,12 +57,15 @@ public abstract class Component {
     /**
      * Handle player placing block at the component's location
      * @param player the player who placed the block
+     * @param block the block that has been placed
      */
     public void handleBlockPlace(Player player, ItemStack block) {}
 
     /**
      * Handle player interacting with the block at the component's location
      * @param player the player who interacted with the block
+     * @param action the action the player has done
+     * @return true, if the interaction should be cancelled
      */
     public boolean handleInteraction(Player player, Action action) {
         return false;
@@ -77,8 +80,13 @@ public abstract class Component {
 
     /**
      * Save the component to JSON
-     * @return
+     * @param object the object to write to
      */
     public void save(JsonObject object) {}
+
+    /**
+     * Load the component from JSON
+     * @param object the object to read from
+     */
     public void load(JsonObject object) {}
 }
