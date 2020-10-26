@@ -73,6 +73,7 @@ public class ComponentCreationGUI extends GUI {
             if(entries.size() >= index) {
                 if(!this.itemFrame.isDead()) {
                     this.created = true;
+                    ComponentManager.getInstance().createComponent(entries.get(index).getKey(), this.itemFrame.getLocation(), this.itemFrame.getAttachedFace().getOppositeFace(), this.itemFrame, this.getPlayer());
                 } else {
                     this.getPlayer().sendMessage(ChatColor.RED + "Item frame has been removed while creating the component");
                 }
