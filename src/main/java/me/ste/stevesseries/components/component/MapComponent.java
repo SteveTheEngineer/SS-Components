@@ -5,10 +5,14 @@ import me.ste.stevesseries.components.map.Map;
 import me.ste.stevesseries.components.map.MapManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Rotation;
 import org.bukkit.block.BlockFace;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.ItemFrame;
 import org.bukkit.entity.Player;
 import org.bukkit.map.MapView;
+
+import java.util.UUID;
 
 /**
  * A component that uses a map for it's functions
@@ -67,5 +71,11 @@ public abstract class MapComponent extends Component {
         super.load(object);
         this.view = Bukkit.getMap(object.get("mapId").getAsInt());
         MapManager.getInstance().replaceMap(this.view.getId(), this.map);
+        for(UUID uuid : MapManager.getInstance().getMapEntities().get(this.view.getId())) {
+            Entity entity = Bukkit.getEntity(uuid);
+            if(entity instanceof ItemFrame) {
+                ((ItemFrame) entity).setRotation(Rotation.NONE);
+            }
+        }
     }
 }
