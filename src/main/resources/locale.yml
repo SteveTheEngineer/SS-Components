@@ -1,0 +1,101 @@
+## Chat Messages
+# Component Tool
+component-already-exists: "&cThere's already a component at the target location"
+block-selected: "&eThe block has been selected: &6%s @ %d, %d, %d" # The arguments are: world (string), block x (int), block y (int), block z (int)
+
+# Component Creation
+item-frame-missing: "&eThe component could not be created. The item frame was missing"
+component-created: "&eThe component has been created"
+
+# Component Modification
+component-deleted: "&eThe component has been deleted"
+component-selected: "&eThe component has been selected"
+
+# /components command
+selected-block: "&eSelected block: &6%s" # The arguments are: value (string)
+selected-block-location: "%s @ %d, %d, %d" # The arguments are: world (string), block x (int), block y (int), block z (int)
+selected-block-none: "None"
+
+selected-component: "&eSelected component: &6%s" # The arguments are: value (string)
+selected-component-component: "%s | %s @ %d, %d, %d. %s" # The arguments are: component display name (string), world (string), block x (int), block y (int), block z (int), component direction (string)
+selected-component-none: "None"
+
+player-only: "&cThis command can only be run by players"
+command-usage: "&cUsage: /components <selectedcomponent [deselect]|selectedblock [deselect]>"
+
+block-deselected: "&eThe block has been deselected"
+component-deselected: "&eThe component has been deselected"
+
+# Generic
+no-permission: "&cInsufficient permissions"
+
+# Component Configuration Elements
+type-new-text: "&eType the text you want to set:"
+new-text-set: "&eThe new text has been set"
+
+## GUIs
+# Component Creation
+click-to-create: "&eClick to create"
+component-creation: "Component Creation"
+
+# Generic
+next-page: "Next Page &7(%d/%d)" # The arguments are: page (int), total pages (int)
+previous-page: "Previous Page &7(%d/%d)" # The arguments are: page (int), total pages (int)
+click-next-page: "&eClick to go to the next page"
+click-previous-page: "&eClick to go to the previous page"
+
+# Component Modification
+component-not-configurable: "This component is not configurable"
+
+delete-component: "Delete Component"
+click-to-delete: "&eShift right click to delete"
+select-component: "Select Component"
+click-to-select: "&eClick to select"
+
+# Component Configuration Elements
+string-element-value: "%s: &e%s" # The arguments are: element name (string), element value (string)
+string-element-type: "&7Type: String"
+string-element-click: "&eClick to enter a new value"
+
+readonly-element-value: "%s: &e%s" # The arguments are: element name (string), element value (string)
+readonly-element-type: "&7Type: Readonly"
+
+component-element-value: "%s: &b%s"
+component-element-component: "%s | %s @ %d, %d, %d. %s" # The arguments are: component display name (string), world (string), block x (int), block y (int), block z (int), component direction (string)
+component-element-invalid: "&cInvalid&b"
+component-element-none: "None"
+component-element-type: "&7Type: Component"
+component-element-bind: "&eLeft click to bind selected component"
+component-element-no-bind: "&e&mLeft click to bind selected component"
+component-element-unbind: "&eShift right click to unbind"
+
+boolean-element-value: "%s: %s"
+boolean-element-true: "&a✔"
+boolean-element-false: "&c❌"
+boolean-element-type: "&7Type: Boolean"
+boolean-element-toggle: "&eClick to toggle"
+
+block-element-value: "%s: &e%s" # The arguments are: element name (string), element value (string)
+block-element-location: "%s @ %d, %d, %d" # The arguments are: world (string), block x (int), block y (int), block z (int)
+block-element-none: "None"
+block-element-type: "&7Type: Block"
+block-element-bind: "&eLeft click to bind selected location"
+block-element-no-bind: "&e&mLeft click to bind selected location"
+block-element-unbind: "&eShift right click to unbind"
+
+number-element-value: "%s: &b%s" # The arguments are: element name (string), element value (string)
+number-element-type: "&7Type: %s (Number)" # The arguments are: number class name (string)
+number-element-add: "&eLeft click to add %s" # The arguments are: step amount (string)
+number-element-subtract: "&eRight click to subtract %s" # The arguments are: step amount (string)
+number-element-add-shift: "&eShift left click to add %s" # The arguments are: step amount (string)
+number-element-subtract-shift: "&eShift left click to subtract %s" # The arguments are: step amount (string)
+
+## Shared
+# Component Configuration Elements & /components command
+component-invalid: "&cInvalid&6"
+
+# Component Configuration & Component Creation GUIs
+
+component-plugin: "&7Plugin: %s" # The arguments are: plugin name (string)
+component-id: "&7ID: %s" # The arguments are: component ID (string)
+component-class: "&7Class: %s" # The arguments are: component class (string)

@@ -1,210 +1,77 @@
 package me.ste.stevesseries.components.component;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import me.ste.stevesseries.base.GenericUtil;
 import me.ste.stevesseries.components.Components;
 import org.bukkit.Location;
-import org.bukkit.block.BlockFace;
-import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.InvalidConfigurationException;
-import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.entity.ItemFrame;
-import org.bukkit.entity.Player;
-import org.jetbrains.annotations.Nullable;
+import org.bukkit.plugin.Plugin;
 
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.*;
-import java.util.logging.Level;
 
+/**
+ * This manager is responsible to managing the components
+ */
 public class ComponentManager {
-    private static ComponentManager instance;
-    private final Components plugin = Components.getPlugin(Components.class);
-    private final FileConfiguration configRoot = plugin.getConfig();
-    private final Map<Class, ComponentFactory> componentFactories = new LinkedHashMap<>();
-    private final Map<Class, String> componentFriendlyNames = new HashMap<>();
-    private final Map<UUID, ComponentLocation> selectedComponents = new HashMap<>();
+    private static final Components PLUGIN = Components.getPlugin(Components.class);
 
-    private final List<Component> components = new LinkedList<>();
+    public static final Map<NamespacedKey, RegisteredComponentData> REGISTERED_COMPONENTS = new HashMap<>();
+    public static final Set<Component> EXISTING_COMPONENTS = new HashSet<>();
 
-    private ComponentManager() {}
+    private ComponentManager() {
 
-    /**
-     * Get the {@link ComponentManager} instance
-     * @return the instance
-     */
-    public static ComponentManager getInstance() {
-        if(ComponentManager.instance == null) {
-            ComponentManager.instance = new ComponentManager();
-        }
-        return ComponentManager.instance;
     }
 
     /**
-     * Save the components to disk
+     * Register a new component. <strong>The component MUST have a ComponentLocation constructor</strong>
+     * @param plugin plugin that owns the component
+     * @param id component unique ID
+     * @param componentClass component class
+     * @param displayName component display name. Defaults to the class name if null
+     * @param displayMaterial component display material. Defaults to {@link Material#EMERALD_BLOCK} if null
+     * @throws IllegalArgumentException if a component with the same identifier is already registered, or the class doesn't have a ComponentLocation constructor
+     * @return registered component data
      */
-    public void save() {
-        File componentsFile = this.plugin.getDataFolder().toPath().resolve("config.yml").toFile();
-        if(!componentsFile.isFile()) {
-            try {
-                if(!componentsFile.createNewFile()) {
-                    return;
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-                return;
-            }
+    public static RegisteredComponentData register(Plugin plugin, String id, Class<? extends Component> componentClass, String displayName, Material displayMaterial) {
+        NamespacedKey identifier = new NamespacedKey(plugin, id);
+
+        if(ComponentManager.PLUGIN.isEnabled()) {
+            throw new IllegalStateException("Attempted to register component " + identifier + ", but the components plugin was already enabled! Register your components in the onLoad method of your plugin class!");
+        }
+
+        if(ComponentManager.REGISTERED_COMPONENTS.containsKey(identifier)) {
+            throw new IllegalArgumentException("A component with the same identifier is already registered: " + identifier);
         }
         try {
-            this.configRoot.load(componentsFile);
-        } catch (IOException | InvalidConfigurationException e) {
-            e.printStackTrace();
+            componentClass.getDeclaredConstructor(ComponentLocation.class);
+        } catch (NoSuchMethodException e) {
+            throw new IllegalArgumentException("The component " + componentClass.getName() + " doesn't have a ComponentLocation constructor");
         }
 
-        List<String> componentss = new LinkedList<>();
-        for(Component component : this.components) {
-            JsonObject saved = new JsonObject();
-            saved.addProperty("class", component.getClass().getName());
-            saved.add("location", GenericUtil.locationToJson(component.getLocation()));
-            saved.addProperty("face", component.getFace().name());
-            try {
-                JsonObject data = new JsonObject();
-                component.save(data);
-                saved.add("data", data);
-                componentss.add(saved.toString());
-            } catch(Throwable t) {
-                this.plugin.getLogger().log(Level.SEVERE, String.format("Unable to save component's data (%s)", component.getClass().getSimpleName()));
-                t.printStackTrace();
-            }
-        }
-        this.configRoot.set("components", componentss);
-
-        ConfigurationSection selectedComponents = this.configRoot.getConfigurationSection("selectedComponents");
-        if(selectedComponents == null) {
-            selectedComponents = this.configRoot.createSection("selectedComponents");
-        }
-
-        for(Map.Entry<UUID, ComponentLocation> location : this.selectedComponents.entrySet()) {
-            selectedComponents.set(location.getKey().toString(), location.getValue().saveToJson().toString());
-        }
-
-        try {
-            this.configRoot.save(componentsFile);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        RegisteredComponentData data = new RegisteredComponentData(plugin, identifier, componentClass, displayMaterial != null ? displayMaterial : Material.EMERALD_BLOCK, displayName != null ? displayName : componentClass.getSimpleName());
+        ComponentManager.REGISTERED_COMPONENTS.put(identifier, data);
+        return data;
     }
 
     /**
-     * Load the components from disk
+     * Same as {@link ComponentManager#register(Plugin, String, Class, String, Material)}, but uses the default values for display name and display material
+     * @param plugin plugin that owns the component
+     * @param id component unique ID
+     * @param componentClass component class
+     * @return registered component data
      */
-    public void load() {
-        File componentsFile = this.plugin.getDataFolder().toPath().resolve("config.yml").toFile();
-        if(!componentsFile.isFile()) {
-            return;
-        }
-        try {
-            this.configRoot.load(componentsFile);
-        } catch (IOException | InvalidConfigurationException e) {
-            e.printStackTrace();
-        }
-        this.components.clear();
-        if(this.configRoot.isList("components")) {
-            for(String json : this.configRoot.getStringList("components")) {
-                JsonObject object = new JsonParser().parse(json).getAsJsonObject();
-                try {
-                    Class clazz = Class.forName(object.get("class").getAsString());
-                    Location location = GenericUtil.locationFromJson(object.getAsJsonObject("location"));
-                    BlockFace face = BlockFace.valueOf(object.get("face").getAsString());
-                    Component component = this.componentFactories.get(clazz).create(location, face, null);
-                    if(component != null) {
-                        try {
-                            component.load(object.get("data").getAsJsonObject());
-                            components.add(component);
-                        } catch(Throwable t) {
-                            this.plugin.getLogger().log(Level.SEVERE, String.format("Unable to load component's data (%s)", clazz.getSimpleName()));
-                            t.printStackTrace();
-                        }
-                    } else {
-                        this.plugin.getLogger().log(Level.SEVERE, String.format("Unable to load component's data (%s), as the component factory creates a null object", clazz.getSimpleName()));
-                    }
-                } catch (ClassNotFoundException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-        this.selectedComponents.clear();
-        if(this.configRoot.isConfigurationSection("selectedComponents")) {
-            ConfigurationSection section = this.configRoot.getConfigurationSection("selectedComponents");
-            for(String uuidString : section.getKeys(false)) {
-                this.selectedComponents.put(UUID.fromString(uuidString), ComponentLocation.loadFromJson(new JsonParser().parse(section.getString(uuidString)).getAsJsonObject()));
-            }
-        }
+    public static RegisteredComponentData register(Plugin plugin, String id, Class<? extends Component> componentClass) {
+        return ComponentManager.register(plugin, id, componentClass, null, null);
     }
 
     /**
-     * @deprecated for internal use only
+     * Get the component at the provided location
+     * @param location component location
+     * @return component, or null if there's none
      */
-    @Deprecated
-    @SafeVarargs
-    public final void register(Class<? extends Component>... componentClasses) {
-        for(Class<? extends Component> clazz : componentClasses) {
-            try {
-                Constructor<? extends Component> constructor = clazz.getConstructor(Location.class, BlockFace.class);
-                this.componentFactories.put(clazz, (location, face, player) -> {
-                    try {
-                        return constructor.newInstance(location, face);
-                    } catch (InstantiationException | InvocationTargetException | IllegalAccessException e) {
-                        e.printStackTrace();
-                        return null;
-                    }
-                });
-                if(clazz.isAnnotationPresent(ComponentFriendlyName.class)) {
-                    this.componentFriendlyNames.put(clazz, clazz.getAnnotation(ComponentFriendlyName.class).value());
-                }
-            } catch (NoSuchMethodException e) {
-                this.plugin.getLogger().log(Level.SEVERE, String.format("Could not find a Location, BlockFace constructor for component %s", clazz.getName()));
-            }
-        }
-    }
-
-    /**
-     * Create a component at the specified location
-     * @param componentClass the class of the component to create
-     * @param location the location of the component
-     * @param face the facing direction of the component
-     * @param itemFrame the item frame used to create the component
-     * @param player the player who created the component
-     * @return created component
-     */
-    public Component createComponent(Class<? extends Component> componentClass, Location location, BlockFace face, ItemFrame itemFrame, @Nullable Player player) {
-        ComponentFactory factory = this.componentFactories.get(componentClass);
-        if(factory == null) {
-            return null;
-        }
-
-        Component component = factory.create(location, face, player);
-        if(component == null) {
-            this.plugin.getLogger().log(Level.SEVERE, String.format("Unable to create a component: %s", componentClass.getName()));
-            return null;
-        }
-        component.create(itemFrame);
-        this.components.add(component);
-        return component;
-    }
-
-    /**
-     * Get the component at the specified location and facing direction
-     * @param location the location
-     * @param face the facing direction
-     * @return the component
-     */
-    public Component getComponent(Location location, BlockFace face) {
-        for(Component component : this.components) {
-            if(component.getLocation().getBlock().getLocation().equals(location.getBlock().getLocation()) && component.getFace().equals(face)) {
+    public static Component getComponentAt(ComponentLocation location) {
+        for(Component component : ComponentManager.getComponentsAt(location.getLocation())) {
+            if(component.getLocation().getDirection() == location.getDirection()) {
                 return component;
             }
         }
@@ -212,110 +79,81 @@ public class ComponentManager {
     }
 
     /**
-     * Get the component at the specified location
-     * @param location the location
-     * @return the component
+     * Get the components at the provided non-precise location
+     * @param location non-precise location
+     * @return list of components
      */
-    public Component getComponent(Location location) {
-        for(Component component : this.components) {
-            if(component.getLocation().getBlock().getLocation().equals(location.getBlock().getLocation())) {
-                return component;
+    public static List<Component> getComponentsAt(Location location) {
+        List<Component> components = new ArrayList<>();
+        for(Component component : ComponentManager.EXISTING_COMPONENTS) {
+            Location location2 = component.getLocation().getLocation();
+            if(location.getBlockX() == location2.getBlockX() && location.getBlockY() == location2.getBlockY() && location.getBlockZ() == location2.getBlockZ()) {
+                components.add(component);
+            }
+        }
+        return components;
+    }
+
+    /**
+     * Create a new component in place of the specified item frame
+     * @param component component unique ID
+     * @param frame item frame. This is required
+     * @return new component instance
+     */
+    public static Component create(NamespacedKey component, ItemFrame frame) {
+        ComponentLocation location = new ComponentLocation(frame.getLocation().getBlock().getLocation(), frame.getFacing());
+        RegisteredComponentData data = ComponentManager.REGISTERED_COMPONENTS.get(component);
+        if(data == null) {
+            throw new IllegalArgumentException("The component " + component + " does not exist");
+        }
+        Component actualComponent = data.createInstance(location);
+        actualComponent.onInitialization(frame);
+        actualComponent.onCreation();
+        ComponentManager.EXISTING_COMPONENTS.add(actualComponent);
+        return actualComponent;
+    }
+
+    /**
+     * Delete the specified component
+     * @param component component to delete
+     */
+    public static void delete(Component component) {
+        if(ComponentManager.exists(component)) {
+            component.onDestruction();
+            component.onDeletion();
+            ComponentManager.EXISTING_COMPONENTS.remove(component);
+        }
+    }
+
+    /**
+     * Check whether the specified component exists in the world
+     * @param component component to check
+     * @return true, if the component exists in the world
+     */
+    public static boolean exists(Component component) {
+        return ComponentManager.EXISTING_COMPONENTS.contains(component);
+    }
+
+    /**
+     * Get the data of a registered component
+     * @param componentId component unique ID
+     * @return registered component data
+     */
+    public static RegisteredComponentData getRegisteredComponentData(NamespacedKey componentId) {
+        return ComponentManager.REGISTERED_COMPONENTS.get(componentId);
+    }
+
+    /**
+     * Get the data of a registered component by it's class
+     * @param componentClass component class
+     * @return first matched component data
+     */
+    public static RegisteredComponentData getRegisteredComponentData(Class<? extends Component> componentClass) {
+        for(RegisteredComponentData data : ComponentManager.REGISTERED_COMPONENTS.values()) {
+            if(data.getComponentClass().equals(componentClass)) {
+                return data;
             }
         }
         return null;
-    }
-
-    /**
-     * Remove the specified component
-     * @param component the component
-     */
-    public void removeComponent(Component component) {
-        if (this.components.contains(component)) {
-            component.handleRemoval();
-            this.components.remove(component);
-        }
-    }
-
-    /**
-     * Get the selected component of the specified player
-     * @param player the player
-     * @return the component
-     */
-    public Component getSelectedComponent(Player player) {
-        ComponentLocation location = this.selectedComponents.get(player.getUniqueId());
-        if(location != null) {
-            return location.getComponent();
-        }
-        return null;
-    }
-
-    /**
-     * Get the selected component location of the specified player
-     * @param player the player
-     * @return the component
-     */
-    public ComponentLocation getSelectedComponentLocation(Player player) {
-        return this.selectedComponents.get(player.getUniqueId());
-    }
-
-    /**
-     * Set selected component of the specified player
-     * @param player the player
-     * @param location location of the component
-     */
-    public void setSelectedComponent(Player player, ComponentLocation location) {
-        if(location != null) {
-            this.selectedComponents.put(player.getUniqueId(), location);
-        } else {
-            this.selectedComponents.remove(player.getUniqueId());
-        }
-    }
-
-
-    /**
-     * Set selected component of the specified player
-     * @param player the player
-     * @param component the component
-     */
-    public void setSelectedComponent(Player player, Component component) {
-        this.setSelectedComponent(player, new ComponentLocation(component.getLocation(), component.getFace()));
-    }
-
-    /**
-     * @deprecated for internal use only
-     */
-    @Deprecated
-    public Map<Class, ComponentFactory> getComponentFactories() {
-        return this.componentFactories;
-    }
-
-    /**
-     * @deprecated for internal use only
-     */
-    @Deprecated
-    public List<Component> getComponents() {
-        return this.components;
-    }
-
-    /**
-     * Get the friendly name of the specified component class
-     * @param clazz component class
-     * @return the friendly name
-     */
-    public String getFriendlyName(Class<? extends Component> clazz) {
-        return this.componentFriendlyNames.get(clazz);
-    }
-
-    /**
-     * Get the display name of the specified component class
-     * @param clazz component class
-     * @return the friendly name, or it's simple class name if it doesn't have one
-     */
-    public String getDisplayName(Class<? extends Component> clazz) {
-        if(this.componentFriendlyNames.containsKey(clazz)) {
-            return this.componentFriendlyNames.get(clazz);
-        } else {
-            return clazz.getSimpleName();
-        }
     }
 }

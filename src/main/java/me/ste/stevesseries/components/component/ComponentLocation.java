@@ -5,22 +5,20 @@ import me.ste.stevesseries.base.GenericUtil;
 import org.bukkit.Location;
 import org.bukkit.block.BlockFace;
 
-public class ComponentLocation {
-    private final Location location;
-    private final BlockFace face;
+import java.util.Objects;
 
-    /**
-     * @param location the location of the component
-     * @param face the direction the component is facing
-     */
-    public ComponentLocation(Location location, BlockFace face) {
-        this.location = location;
-        this.face = face;
+public class ComponentLocation implements Cloneable {
+    private final Location location;
+    private final BlockFace direction;
+
+    public ComponentLocation(Location location, BlockFace direction) {
+        this.location = location.getBlock().getLocation();
+        this.direction = direction;
     }
 
     /**
      * Get the component location
-     * @return the component location
+     * @return component location
      */
     public Location getLocation() {
         return this.location;
@@ -28,10 +26,10 @@ public class ComponentLocation {
 
     /**
      * Get the component facing direction
-     * @return the component facing direction
+     * @return component facing direction
      */
-    public BlockFace getFace() {
-        return this.face;
+    public BlockFace getDirection() {
+        return this.direction;
     }
 
     /**
@@ -41,16 +39,8 @@ public class ComponentLocation {
     public JsonObject saveToJson() {
         JsonObject object = new JsonObject();
         object.add("location", GenericUtil.locationToJson(this.location));
-        object.addProperty("face", this.face.name());
+        object.addProperty("face", this.direction.name());
         return object;
-    }
-
-    /**
-     * Get the component at the location
-     * @return the component, or null if there's no component
-     */
-    public Component getComponent() {
-        return ComponentManager.getInstance().getComponent(this.location, this.face);
     }
 
     /**
@@ -69,15 +59,28 @@ public class ComponentLocation {
      * @return true, if the component meets the requirements
      */
     public static boolean isValid(ComponentLocation location, Class<? extends Component> requiredClass) {
-        return ComponentLocation.isValid(location) && requiredClass.isAssignableFrom(location.getComponent().getClass());
+        return location != null && ComponentManager.getComponentAt(location) != null && requiredClass.isAssignableFrom(ComponentManager.getComponentAt(location).getClass());
     }
 
-    /**
-     * Check if the specified location isn't null and there's a component at the location
-     * @param location the location
-     * @return true, if the component exists
-     */
-    public static boolean isValid(ComponentLocation location) {
-        return location != null && location.getComponent() != null;
+    @Override
+    public ComponentLocation clone() {
+        return new ComponentLocation(this.location.clone(), this.direction);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if(o == null || this.getClass() != o.getClass()) {
+            return false;
+        }
+        ComponentLocation that = (ComponentLocation) o;
+        return Objects.equals(this.location, that.location) && this.direction == that.direction;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(location, direction);
     }
 }

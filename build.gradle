@@ -27,9 +27,9 @@ repositories {
 }
 
 dependencies {
-    compileOnly "org.spigotmc:spigot-api:1.15.2-R0.1-SNAPSHOT"
-    compileOnly "me.ste.stevesseries:base:17"
-    compileOnly "me.ste.stevesseries:inventoryguilibrary:2"
+    compileOnly "org.spigotmc:spigot-api:1.16.5-R0.1-SNAPSHOT"
+    compileOnly "me.ste.stevesseries:base:24"
+    compileOnly "me.ste.stevesseries:inventoryguilibrary:9"
     compileOnly "org.jetbrains:annotations:16.0.2"
 }
 

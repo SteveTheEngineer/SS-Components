@@ -1,8 +1,7 @@
 name: SS-Components
 version: @version@
 main: me.ste.stevesseries.components.Components
-api-version: 1.13
-prefix: SS | Components
+api-version: 1.16
 authors: [SteveTheEngineer]
 description: Steve's Series | Components. A plugin that gives an opportunity for the server admins to add more interactivity to their minecraft worlds
 depend: [SS-Base, SS-InventoryGUILibrary]
@@ -10,4 +9,12 @@ depend: [SS-Base, SS-InventoryGUILibrary]
 commands:
   components:
     description: Components plugin command
-    usage: /components <selectedcomponent [deselect]|selectedlocation [deselect]>
+    usage: /components <selectedcomponent [deselect]|selectedblock [deselect]>
+
+permissions:
+  stevesseries.components.command:
+    description: The permission to use the /components command
+    default: true
+  stevesseries.components.modify:
+    description: The permission to place new and modify existing components
+    default: op
