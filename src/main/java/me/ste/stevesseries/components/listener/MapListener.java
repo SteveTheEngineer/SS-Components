@@ -188,6 +188,9 @@ public class MapListener implements Listener {
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
         if(event.getEntity().getType() == EntityType.ITEM_FRAME && MapManager.getMapData((ItemFrame) event.getEntity()) != null) {
             event.setCancelled(true);
+            if(event.getDamager() instanceof Player && ((Player) event.getDamager()).getGameMode() != GameMode.ADVENTURE) {
+                this.onInteraction((Player) event.getDamager(), MapClickType.LEFT);
+            }
         }
     }
 
