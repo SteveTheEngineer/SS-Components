@@ -1,9 +1,8 @@
 package me.ste.stevesseries.components.map.render;
 
 import me.ste.stevesseries.components.map.MapData;
-import me.ste.stevesseries.components.map.cursor.MapFeatureType;
-import me.ste.stevesseries.components.map.cursor.MapMarkerDirection;
-import me.ste.stevesseries.components.map.cursor.MapMarkerType;
+import me.ste.stevesseries.components.map.cursor.MapIconDirection;
+import me.ste.stevesseries.components.map.cursor.MapIconType;
 import me.ste.stevesseries.components.map.text.CustomMapFont;
 import me.ste.stevesseries.components.map.text.TextAnchor;
 import me.ste.stevesseries.components.map.text.TextMeasurement;
@@ -88,9 +87,9 @@ public class CustomMapCanvas {
     }
 
     /**
-     * Clear all the banners, features and markers on the map
+     * Clear all the icons (including banners) on the map
      */
-    public void clearCursors() {
+    public void clearIcons() {
         this.canvas.setCursors(new MapCursorCollection());
     }
 
@@ -104,41 +103,30 @@ public class CustomMapCanvas {
      * @deprecated <strong>use with caution! The banners will stay on the map if the server is reloaded using the /reload command</strong>
      */
     @Deprecated
-    public void drawBanner(int x, int y, DyeColor color, MapMarkerDirection direction, String title) {
-        this.canvas.getCursors().addCursor(new MapCursor((byte) (Byte.MIN_VALUE + x), (byte) (Byte.MIN_VALUE + y), (byte) 0, MapCursor.Type.valueOf("BANNER_" + color.name()), true, title));
+    public void drawBannerIcon(int x, int y, DyeColor color, MapIconDirection direction, String title) {
+        this.canvas.getCursors().addCursor(new MapCursor((byte) (Byte.MIN_VALUE + x), (byte) (Byte.MIN_VALUE + y), (byte) direction.ordinal(), MapCursor.Type.valueOf("BANNER_" + color.name()), true, title));
     }
 
     /**
-     * Draw a feature on the canvas. <strong>Note that this method works in a 256x256 space rather than 128x128</strong>
+     * Draw an icon on the canvas. <strong>Note that this method works in a 256x256 space rather than 128x128</strong>
      * @param x x position in <strong>a 256x256</strong> space
      * @param y y position in <strong>a 256x256</strong> space
-     * @param type feature type
-     * @deprecated <strong>use with caution! The features will stay on the map if the server is reloaded using the /reload command</strong>
+     * @param type icon type
+     * @param direction icon direction
+     * @param title title shown under the banner. null for none
+     * @deprecated <strong>use with caution! The icons will stay on the map if the server is reloaded using the /reload command</strong>
      */
     @Deprecated
-    public void drawFeature(int x, int y, MapFeatureType type) {
-        this.canvas.getCursors().addCursor(new MapCursor((byte) (Byte.MIN_VALUE + x), (byte) (Byte.MIN_VALUE + y), (byte) 0, type.getBukkitType(), true));
+    public void drawIcon(int x, int y, MapIconType type, MapIconDirection direction, String title) {
+        this.canvas.getCursors().addCursor(new MapCursor((byte) (Byte.MIN_VALUE + x), (byte) (Byte.MIN_VALUE + y), (byte) direction.ordinal(), type.getBukkitType(), true, title));
     }
 
     /**
-     * Draw a marker on the canvas. <strong>Note that this method works in a 256x256 space rather than 128x128</strong>
-     * @param x x position in a <strong>a 256x256</strong> space
-     * @param y y position in a <strong>a 256x256</strong> space
-     * @param type marker type
-     * @param direction marker direction
-     * @deprecated <strong>use with caution! The markers will stay on the map if the server is reloaded using the /reload command</strong>
-     */
-    @Deprecated
-    public void drawMarker(int x, int y, MapMarkerType type, MapMarkerDirection direction) {
-        this.canvas.getCursors().addCursor(new MapCursor((byte) (Byte.MIN_VALUE + x), (byte) (Byte.MIN_VALUE + y), (byte) direction.ordinal(), type.getBukkitType(), true));
-    }
-
-    /**
-     * {@link CustomMapCanvas#clearCursors()} and {@link CustomMapCanvas#clearPixels(MapColor)} at the same time
+     * {@link CustomMapCanvas#clearIcons()} and {@link CustomMapCanvas#clearPixels(MapColor)} at the same time
      * @param color pixel color for {@link CustomMapCanvas#clearPixels(MapColor)}
      */
     public void clearAll(MapColor color) {
         this.clearPixels(color);
-        this.clearCursors();
+        this.clearIcons();
     }
 }

@@ -3,7 +3,7 @@ package me.ste.stevesseries.components.map.cursor;
 /**
  * The direction of a map marker. The value names will definitely get changed in the future
  */
-public enum MapMarkerDirection {
+public enum MapIconDirection {
     DIRECTION_0,
     DIRECTION_2,
     DIRECTION_3,
