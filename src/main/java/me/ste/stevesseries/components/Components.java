@@ -78,7 +78,11 @@ public final class Components extends JavaPlugin {
         this.getServer().getPluginManager().registerEvents(new MapListener(), this);
 
         // Start all the required tasks
-        this.getServer().getScheduler().runTaskTimer(this, this::save, 0L, 20L * 60L * 5L); // Run the save task every 5 minutes
+        this.getServer().getScheduler().runTaskTimer(this, () -> {
+            if(this.isEnabled()) {
+                this.save();
+            }
+        }, 20L * 5L, 20L * 60L * 5L); // Run the save task every 5 minutes
 
         // Set the commands' executors
         this.getCommand("components").setExecutor(new ComponentsCommand(this));
@@ -313,12 +317,13 @@ public final class Components extends JavaPlugin {
         boolean errors = false;
         for(JsonElement element : components) {
             JsonObject object = element.getAsJsonObject();
-            RegisteredComponentData data = ComponentManager.getRegisteredComponentData(GenericUtil.parseNamespacedKey(object.get("id").getAsString()));
+            NamespacedKey id = GenericUtil.parseNamespacedKey(object.get("id").getAsString());
+            RegisteredComponentData data = ComponentManager.getRegisteredComponentData(id);
             ComponentLocation location = ComponentLocation.loadFromJson(object.getAsJsonObject("location"));
             Location bukkitLocation = location.getLocation();
 
             if(data == null) {
-                this.getLogger().severe(String.format("Attempted to load component %s @ %d, %d, %d. %s from disk, but there wasn't a registered component with the matching ID!", bukkitLocation.getWorld().getName(), bukkitLocation.getBlockX(), bukkitLocation.getBlockY(), bukkitLocation.getBlockZ(), location.getDirection().name()));
+                this.getLogger().severe(String.format("Attempted to load component ID %s | %s @ %d, %d, %d. %s from disk, but there wasn't a registered component with the matching ID!", id.toString(), bukkitLocation.getWorld().getName(), bukkitLocation.getBlockX(), bukkitLocation.getBlockY(), bukkitLocation.getBlockZ(), location.getDirection().name()));
                 errors = true;
                 continue;
             }
