@@ -53,13 +53,13 @@ public class ComponentLocation implements Cloneable {
     }
 
     /**
-     * Check if the specified location isn't null and the component at the location exists and the component class matches
+     * Check if the specified location isn't null and the component at the location exists and the component is an instance of the specified class
      * @param location the component location
-     * @param requiredClass expected component class
+     * @param requiredClass expected class
      * @return true, if the component meets the requirements
      */
-    public static boolean isValid(ComponentLocation location, Class<? extends Component> requiredClass) {
-        return location != null && ComponentManager.getComponentAt(location) != null && requiredClass.isAssignableFrom(ComponentManager.getComponentAt(location).getClass());
+    public static boolean isValid(ComponentLocation location, Class<?> requiredClass) {
+        return location != null && ComponentManager.getComponentAt(location) != null && requiredClass.isInstance(ComponentManager.getComponentAt(location));
     }
 
     @Override
