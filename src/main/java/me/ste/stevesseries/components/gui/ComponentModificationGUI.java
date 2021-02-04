@@ -34,6 +34,7 @@ public class ComponentModificationGUI extends Widget {
     private final Component component;
     private final RegisteredComponentData data;
     private final ItemStack componentStack;
+    private final PaginationWidget pagination;
 
     public ComponentModificationGUI(Component component) {
         super(0, 0, 9, 3);
@@ -43,27 +44,10 @@ public class ComponentModificationGUI extends Widget {
 
         ComponentModificationGUI self = this;
 
-        PaginationWidget pagination = new PaginationWidget(0, 0, this.getWidth(), this.getHeight() - 1, !(component instanceof ConfigurableComponent) ? ComponentModificationGUI.NOT_CONFIGURABLE : null);
-        if(component instanceof ConfigurableComponent) {
-            List<Widget> elements = new ArrayList<>();
-            for(ConfigurationElement element : ((ConfigurableComponent) component).getConfiguration()) {
-                elements.add(new ButtonWidget(0, 0, 1, 1) {
-                    @Override
-                    protected ItemStack getItem() {
-                        return element.getItem(self.getPlayer());
-                    }
+        this.pagination = new PaginationWidget(0, 0, this.getWidth(), this.getHeight() - 1, !(component instanceof ConfigurableComponent) ? ComponentModificationGUI.NOT_CONFIGURABLE : null);
+        this.addChild(this.pagination);
 
-                    @Override
-                    protected void click(ClickType type) {
-                        element.onClick(self.getPlayer(), type);
-                    }
-                });
-            }
-            pagination.setItems(elements);
-        }
-        this.addChild(pagination);
-
-        PaginationWidgetBarWidget w = new PaginationWidgetBarWidget(0, this.getHeight() - 1, this.getWidth(), 1, null, pagination) {
+        PaginationWidgetBarWidget w = new PaginationWidgetBarWidget(0, this.getHeight() - 1, this.getWidth(), 1, null, this.pagination) {
             @Override
             protected ItemStack getNextPageItem(int page, int pages) {
                 return new ItemStackBuilder(Material.BLUE_STAINED_GLASS_PANE).displayName(ComponentModificationGUI.PLUGIN.getMessage("next-page", page, pages)).lore("", ComponentModificationGUI.PLUGIN.getMessage("click-next-page")).build();
@@ -108,6 +92,25 @@ public class ComponentModificationGUI extends Widget {
 
     @Override
     public void render(GridInventory grid) {
+        if(this.component instanceof ConfigurableComponent) {
+            ComponentModificationGUI self = this;
+            List<Widget> elements = new ArrayList<>();
+            for(ConfigurationElement element : ((ConfigurableComponent) component).getConfiguration()) {
+                elements.add(new ButtonWidget(0, 0, 1, 1) {
+                    @Override
+                    protected ItemStack getItem() {
+                        return element.getItem(self.getPlayer());
+                    }
+
+                    @Override
+                    protected void click(ClickType type) {
+                        element.onClick(self.getPlayer(), type);
+                    }
+                });
+            }
+            this.pagination.setItems(elements);
+        }
+
         grid.fill(1, this.getRealY() + this.getHeight() - 1, this.getWidth() - 2, 1, ComponentModificationGUI.BAR_BACKGROUND);
 
         grid.set(6, this.getRealY() + this.getHeight() - 1, this.componentStack);
