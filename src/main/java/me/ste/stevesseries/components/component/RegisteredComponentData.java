@@ -74,8 +74,10 @@ public class RegisteredComponentData {
     public Component createInstance(ComponentLocation location) {
         try {
             return this.componentClass.getConstructor(ComponentLocation.class).newInstance(location);
-        } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+        } catch(NoSuchMethodException e) {
             throw new IllegalStateException("The registered component " + this.identifier + " doesn't have a ComponentLocation constructor");
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+            throw new RuntimeException("An error has occurred while creating a new instance of component " + this.identifier, e);
         }
     }
 }
