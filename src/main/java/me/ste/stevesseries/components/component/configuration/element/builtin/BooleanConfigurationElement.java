@@ -22,8 +22,8 @@ public class BooleanConfigurationElement implements ConfigurationElement {
         this.valueSupplier = valueSupplier;
         this.toggleRunnable = toggleRunnable;
 
-        this.trueItem = new ItemStackBuilder(Material.LIME_CONCRETE).displayName(BooleanConfigurationElement.PLUGIN.getMessage("boolean-element-value", BooleanConfigurationElement.PLUGIN.getMessage("boolean-element-true"))).lore(BooleanConfigurationElement.PLUGIN.getMessage("boolean-element-type"), "", BooleanConfigurationElement.PLUGIN.getMessage("boolean-element-toggle")).build();
-        this.falseItem = new ItemStackBuilder(Material.RED_CONCRETE).displayName(BooleanConfigurationElement.PLUGIN.getMessage("boolean-element-value", BooleanConfigurationElement.PLUGIN.getMessage("boolean-element-false"))).lore(BooleanConfigurationElement.PLUGIN.getMessage("boolean-element-type"), "", BooleanConfigurationElement.PLUGIN.getMessage("boolean-element-toggle")).build();
+        this.trueItem = new ItemStackBuilder(Material.LIME_CONCRETE).displayName(BooleanConfigurationElement.PLUGIN.getMessage("boolean-element-value", name, BooleanConfigurationElement.PLUGIN.getMessage("boolean-element-true"))).lore(BooleanConfigurationElement.PLUGIN.getMessage("boolean-element-type"), "", BooleanConfigurationElement.PLUGIN.getMessage("boolean-element-toggle")).build();
+        this.falseItem = new ItemStackBuilder(Material.RED_CONCRETE).displayName(BooleanConfigurationElement.PLUGIN.getMessage("boolean-element-value", name, BooleanConfigurationElement.PLUGIN.getMessage("boolean-element-false"))).lore(BooleanConfigurationElement.PLUGIN.getMessage("boolean-element-type"), "", BooleanConfigurationElement.PLUGIN.getMessage("boolean-element-toggle")).build();
     }
 
     @Override
