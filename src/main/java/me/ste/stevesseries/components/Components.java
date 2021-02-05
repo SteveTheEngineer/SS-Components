@@ -48,6 +48,7 @@ public final class Components extends JavaPlugin {
 
     private final Path localeConfigurationFile = this.dataFolder.resolve("locale.yml");
     private final FileConfiguration localeConfiguration = new YamlConfiguration();
+    private boolean componentsLoaded = false;
 
     @Override
     public void onLoad() {
@@ -158,7 +159,7 @@ public final class Components extends JavaPlugin {
     }
 
     /**
-     * Check if the provided item is a component tool. This is separate from {@link ComponentManager}, because the component management is a part of the plugin itself rather than the provided API
+     * Check if the provided item is a component tool. This is separate from {@link ComponentManager}, because the component management is a part of the plugin itself, and not of the the provided API
      * @param stack item stack to check
      * @return true, if the provided item stack is a valid component tool
      */
@@ -182,7 +183,9 @@ public final class Components extends JavaPlugin {
     private void save() {
         this.saveSelectedLocations();
         this.saveRemovedEntities();
-        this.saveComponents();
+        if(this.componentsLoaded) {
+            this.saveComponents();
+        }
     }
 
     private void saveRemovedEntities() {
@@ -313,6 +316,7 @@ public final class Components extends JavaPlugin {
             components = new JsonArray();
         }
 
+        this.componentsLoaded = true;
         ComponentManager.EXISTING_COMPONENTS.clear();
         boolean errors = false;
         for(JsonElement element : components) {
@@ -343,6 +347,7 @@ public final class Components extends JavaPlugin {
 
         if(!Files.exists(this.forceLoadFile)) {
             if(errors) {
+                this.componentsLoaded = false;
                 this.getLogger().severe("The server has been shutdown to prevent world corruption. See the errors to find out which components could not be loaded. If it says that the component is not registered, make sure you have the plugin that provides the component (the plugin name is the namespace of the component id, for example ss-components:test's owning plugin would be ss-components). Make sure you have the latest version of that plugin, the problem might have been fixed in the latest version. If you've recently upgraded the plugin, try downgrading the plugin to the previous version to see if the problem still persists. If downgrading the plugin solves the problem, please contact the plugin author for further investigation. If it says something else, contact the plugin author, they'll be able to solve this issue. If by this time you still have your issue, your last option is to create a \"_COMPONENTS_FORCE_LOAD\" file in the server root (case sensitive), but MAKE SURE YOU KNOW WHAT YOU'RE DOING! This will forcefully delete the components that have failed to load. The world might need manual clean up after this step");
                 Bukkit.shutdown();
             }
