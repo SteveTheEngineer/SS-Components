@@ -157,17 +157,16 @@ public class MapListener implements Listener {
     private final Set<UUID> ignoreInteractEvent = new HashSet<>();
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
-        Player player = event.getPlayer();
-        Action action = event.getAction();
         if(event.getHand() == EquipmentSlot.HAND) {
+            Player player = event.getPlayer();
+            Action action = event.getAction();
             if(!this.ignoreInteractEvent.contains(player.getUniqueId())) {
-                if(event.getPlayer().getGameMode() == GameMode.ADVENTURE && (action == Action.LEFT_CLICK_AIR || action == Action.LEFT_CLICK_BLOCK)) {
-                    return;
-                }
                 if(this.onInteraction(player, action == Action.RIGHT_CLICK_BLOCK || action == Action.RIGHT_CLICK_AIR ? MapClickType.RIGHT : MapClickType.LEFT)) {
-                    this.ignoreInteractEvent.add(player.getUniqueId());
                     if(action == Action.RIGHT_CLICK_AIR) {
                         player.swingMainHand();
+                    }
+                    if(action == Action.RIGHT_CLICK_BLOCK || action == Action.RIGHT_CLICK_AIR) {
+                        this.ignoreInteractEvent.add(player.getUniqueId());
                     }
                     event.setCancelled(true);
                 }
@@ -178,23 +177,12 @@ public class MapListener implements Listener {
     }
 
     @EventHandler
-    public void onPlayerAnimation(PlayerAnimationEvent event) {
-        if(event.getAnimationType() == PlayerAnimationType.ARM_SWING && event.getPlayer().getTargetBlockExact(4) != null && event.getPlayer().getGameMode() == GameMode.ADVENTURE) {
-            if(!this.ignoreInteractEvent.contains(event.getPlayer().getUniqueId())) {
-                this.onInteraction(event.getPlayer(), MapClickType.LEFT);
-            } else {
-                this.ignoreInteractEvent.remove(event.getPlayer().getUniqueId());
-            }
-        }
-    }
-
-    @EventHandler
     public void onEntityInteract(PlayerInteractEntityEvent event) {
         Player player = event.getPlayer();
         if(event.getHand() == EquipmentSlot.HAND && event.getRightClicked().getType() == EntityType.ITEM_FRAME) {
             if(MapManager.getMapData((ItemFrame) event.getRightClicked()) != null) {
-                this.ignoreInteractEvent.add(player.getUniqueId());
                 event.setCancelled(true);
+                this.ignoreInteractEvent.add(event.getPlayer().getUniqueId());
                 this.onInteraction(player, MapClickType.RIGHT);
             }
         }
@@ -204,8 +192,9 @@ public class MapListener implements Listener {
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
         if(event.getEntity().getType() == EntityType.ITEM_FRAME && MapManager.getMapData((ItemFrame) event.getEntity()) != null) {
             event.setCancelled(true);
-            if(event.getDamager() instanceof Player && ((Player) event.getDamager()).getGameMode() != GameMode.ADVENTURE) {
+            if(event.getDamager() instanceof Player) {
                 this.onInteraction((Player) event.getDamager(), MapClickType.LEFT);
+                this.ignoreInteractEvent.add(event.getDamager().getUniqueId());
             }
         }
     }
