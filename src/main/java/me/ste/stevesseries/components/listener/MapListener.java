@@ -15,6 +15,8 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.hanging.HangingBreakEvent;
 import org.bukkit.event.inventory.InventoryCreativeEvent;
+import org.bukkit.event.player.PlayerAnimationEvent;
+import org.bukkit.event.player.PlayerAnimationType;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.world.ChunkLoadEvent;
@@ -44,7 +46,7 @@ public class MapListener implements Listener {
                 resultDistance = blockResult.getHitPosition().distanceSquared(eyeLocation.toVector()); // Set resultDistance to the hit block location, to prevent interacting with maps through blocks
             }
 
-            RayTraceResult entityResult = player.getWorld().rayTraceEntities(eyeLocation, player.getLocation().getDirection(), maxDistance, entity -> entity.getUniqueId() != player.getUniqueId()); // Get the closest hit entity
+            RayTraceResult entityResult = player.getWorld().rayTraceEntities(eyeLocation, player.getLocation().getDirection(), maxDistance, entity -> entity.getUniqueId() != player.getUniqueId() && (!(entity instanceof Player) || ((Player) entity).getGameMode() != GameMode.SPECTATOR)); // Get the closest hit entity
             if(entityResult != null && entityResult.getHitEntity() != null) {
                 double distance = entityResult.getHitPosition().distanceSquared(eyeLocation.toVector());
                 if(distance < resultDistance) {
@@ -159,15 +161,29 @@ public class MapListener implements Listener {
         Action action = event.getAction();
         if(event.getHand() == EquipmentSlot.HAND) {
             if(!this.ignoreInteractEvent.contains(player.getUniqueId())) {
+                if(event.getPlayer().getGameMode() == GameMode.ADVENTURE && (action == Action.LEFT_CLICK_AIR || action == Action.LEFT_CLICK_BLOCK)) {
+                    return;
+                }
                 if(this.onInteraction(player, action == Action.RIGHT_CLICK_BLOCK || action == Action.RIGHT_CLICK_AIR ? MapClickType.RIGHT : MapClickType.LEFT)) {
+                    this.ignoreInteractEvent.add(player.getUniqueId());
                     if(action == Action.RIGHT_CLICK_AIR) {
                         player.swingMainHand();
-                        this.ignoreInteractEvent.add(player.getUniqueId());
                     }
                     event.setCancelled(true);
                 }
             } else {
                 this.ignoreInteractEvent.remove(player.getUniqueId());
+            }
+        }
+    }
+
+    @EventHandler
+    public void onPlayerAnimation(PlayerAnimationEvent event) {
+        if(event.getAnimationType() == PlayerAnimationType.ARM_SWING && event.getPlayer().getTargetBlockExact(4) != null && event.getPlayer().getGameMode() == GameMode.ADVENTURE) {
+            if(!this.ignoreInteractEvent.contains(event.getPlayer().getUniqueId())) {
+                this.onInteraction(event.getPlayer(), MapClickType.LEFT);
+            } else {
+                this.ignoreInteractEvent.remove(event.getPlayer().getUniqueId());
             }
         }
     }
@@ -188,7 +204,7 @@ public class MapListener implements Listener {
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
         if(event.getEntity().getType() == EntityType.ITEM_FRAME && MapManager.getMapData((ItemFrame) event.getEntity()) != null) {
             event.setCancelled(true);
-            if(event.getDamager() instanceof Player) {
+            if(event.getDamager() instanceof Player && ((Player) event.getDamager()).getGameMode() != GameMode.ADVENTURE) {
                 this.onInteraction((Player) event.getDamager(), MapClickType.LEFT);
             }
         }
