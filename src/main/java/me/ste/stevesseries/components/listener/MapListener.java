@@ -165,7 +165,7 @@ public class MapListener implements Listener {
                     if(action == Action.RIGHT_CLICK_AIR) {
                         player.swingMainHand();
                     }
-                    if(action == Action.RIGHT_CLICK_BLOCK || action == Action.RIGHT_CLICK_AIR) {
+                    if(event.getPlayer().getGameMode() == GameMode.ADVENTURE && (action == Action.RIGHT_CLICK_BLOCK || action == Action.RIGHT_CLICK_AIR)) {
                         this.ignoreInteractEvent.add(player.getUniqueId());
                     }
                     event.setCancelled(true);
@@ -182,7 +182,9 @@ public class MapListener implements Listener {
         if(event.getHand() == EquipmentSlot.HAND && event.getRightClicked().getType() == EntityType.ITEM_FRAME) {
             if(MapManager.getMapData((ItemFrame) event.getRightClicked()) != null) {
                 event.setCancelled(true);
-                this.ignoreInteractEvent.add(event.getPlayer().getUniqueId());
+                if(event.getPlayer().getGameMode() == GameMode.ADVENTURE) {
+                    this.ignoreInteractEvent.add(event.getPlayer().getUniqueId());
+                }
                 this.onInteraction(player, MapClickType.RIGHT);
             }
         }
@@ -194,7 +196,9 @@ public class MapListener implements Listener {
             event.setCancelled(true);
             if(event.getDamager() instanceof Player) {
                 this.onInteraction((Player) event.getDamager(), MapClickType.LEFT);
-                this.ignoreInteractEvent.add(event.getDamager().getUniqueId());
+                if(((Player) event.getDamager()).getGameMode() == GameMode.ADVENTURE) {
+                    this.ignoreInteractEvent.add(event.getDamager().getUniqueId());
+                }
             }
         }
     }
